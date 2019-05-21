@@ -55,10 +55,23 @@ def check_data(test_matrix, train_matrix):
 # compute the mean and standard deviation for each feature in the training set given each class
 def mean_and_std_dev(train_matrix):
     min = 0.0001
+    for i in range(1, 57):
+        mean_feature_x = stat.mean(train_matrix[:, i])
+        std_feature_x = stat.stdev(train_matrix[:, i])
+        if mean_feature_x == 0.0:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            break
+        if std_feature_x == 0.0:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            break
+        print("mean feature #", i, ":", mean_feature_x)
+        print("stdev feature #", i, ":", std_feature_x)
+        naive_bayes(mean_feature_x, std_feature_x)
 
-    # first column will be MEAN and second column will be standard deviation
-    train_class_spam = np.empty(57, 2)
-    train_class_not_spam = np.empty(57, 2)
+
+# this is where we do the niave bayes classification
+def naive_bayes(mean, stdev):
+    
 
 # main program
 load_data()
