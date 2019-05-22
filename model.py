@@ -50,11 +50,11 @@ def check_data(test_matrix, train_matrix):
     train_prior_not_spam = not_spam / 2301
     print("spam prior training set =", train_prior_spam)
     print("NOT spam prior training set =", train_prior_not_spam)
-    mean_and_std_dev(test_prior_spam, test_prior_not_spam, train_matrix, test_matrix, spam, not_spam)
+    mean_and_std_dev(train_prior_spam, train_prior_not_spam, train_matrix, test_matrix, spam, not_spam)
 
 
 # compute the mean and standard deviation for each feature in the training set given each class
-def mean_and_std_dev(test_prior_spam, test_prior_not_spam, train_matrix, test_matrix, spam, not_spam):
+def mean_and_std_dev(train_prior_spam, train_prior_not_spam, train_matrix, test_matrix, spam, not_spam):
     train_spam = np.empty((spam, 58))
     train_not_spam = np.empty((not_spam, 58))
     i = 0
@@ -82,46 +82,45 @@ def mean_and_std_dev(test_prior_spam, test_prior_not_spam, train_matrix, test_ma
         notSpam_m.append(not_spam_mean_feature_x)
         not_spam_std_feature_x = stat.stdev(train_not_spam[:, i])
         notSpam_s.append(not_spam_std_feature_x)
-        if spam_m[i] == 0.0:
-            spam_m[i] = 0.0001
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        if spam_s[i] == 0.0:
-            spam_s[i] = 0.0001
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        if notSpam_m[i] == 0.0:
-            notSpam_m[i] = 0.0001
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        if notSpam_s == 0.0:
-            notSpam_s = 0.0001
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, test_prior_spam, test_prior_not_spam)
+        if 0.0 <= spam_m[i] < 0.01:
+            spam_m[i] = 0.00001
+        if 0.0 <= spam_s[i] < 0.01:
+            spam_s[i] = 0.00001
+        if 0.0 <= notSpam_m[i] < 0.01:
+            notSpam_m[i] = 0.00001
+        if 0.0 <= notSpam_s[i] < 0.01:
+            notSpam_s = 0.00001
+    naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_prior_spam, train_prior_not_spam)
 
 
 # this is where we do the niave bayes classification
-def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, test_prior_spam, test_prior_not_spam):
-    cond_prob_notspam = 0
-    cond_prob_spam = 0
+def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_prior_spam, train_prior_not_spam):
+    #to build confusion matrix
     conf_predict = []
     conf_true = test_matrix[:, 57]
-
 
     # calculate cond probability of feature given class spam
     q = 0
     r = 0
     for i in range(0, 2300):
-        cond_prob_notspam = log(test_prior_not_spam)
-        cond_prob_spam = log(test_prior_spam)
-        for j in range(0, 56):
-            x = pow(e, -1 * (((test_matrix[i][j] - spam_m[j])**2) / ((2*spam_s[j])**2)))
-            x = x / (sqrt(2*pi)*spam_s[j])
-            # x = log(x)
+        cond_prob_notspam = log(train_prior_not_spam)
+        cond_prob_spam = log(train_prior_spam)
+        for j in range(0, 57):
+            x = ((test_matrix[i][j] - spam_m[j])**2) / (2*(spam_s[j]**2))
+            x = e**(-x)
+            x = x / ((sqrt(2*pi))*spam_s[j])
+            if x == 0:
+                x = e
+            x = log(x)
             cond_prob_spam = cond_prob_spam + x
-    # calculate cond probability of feature given class NOTSPAM
-            z = pow(e, -1 * ( ((test_matrix[i][j] - notSpam_m[j])**2) / ((2*notSpam_s[j])**2) ))
-            z = z / (sqrt(2*pi)*spam_s[j])
-            # z = log(z)
+            # calculate cond probability of feature given class NOTSPAM
+            z = ((test_matrix[i][j] - notSpam_m[j])**2) / (2*(notSpam_s[j]**2))
+            z = e**(-z)
+            z = z / ((sqrt(2*pi))*notSpam_s[j])
+            if z == 0:
+                z = e
+            z = log(z)
             cond_prob_notspam = cond_prob_notspam + z
-
         if cond_prob_notspam > cond_prob_spam:
             q = q + 1
             conf_predict.append(0)
@@ -170,12 +169,6 @@ def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, test_prior_sp
 
     print("~~CONFUSION MATRIX~~")
     print(conf_matrix)
-
-
-
-
-
-
 
 
 # main program
