@@ -50,11 +50,11 @@ def check_data(test_matrix, train_matrix):
     train_prior_not_spam = not_spam / 2301
     print("spam prior training set =", train_prior_spam)
     print("NOT spam prior training set =", train_prior_not_spam)
-    mean_and_std_dev(train_matrix, test_matrix, train_prior_spam, train_prior_not_spam, spam, not_spam)
+    mean_and_std_dev(test_prior_spam, test_prior_not_spam, train_matrix, test_matrix, spam, not_spam)
 
 
 # compute the mean and standard deviation for each feature in the training set given each class
-def mean_and_std_dev(train_matrix, test_matrix, train_prior_spam, train_prior_not_spam, spam, not_spam):
+def mean_and_std_dev(test_prior_spam, test_prior_not_spam, train_matrix, test_matrix, spam, not_spam):
     train_spam = np.empty((spam, 58))
     train_not_spam = np.empty((not_spam, 58))
     i = 0
@@ -94,11 +94,11 @@ def mean_and_std_dev(train_matrix, test_matrix, train_prior_spam, train_prior_no
         if notSpam_s == 0.0:
             notSpam_s = 0.0001
             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_spam, train_not_spam, train_prior_spam, train_prior_not_spam)
+    naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, test_prior_spam, test_prior_not_spam)
 
 
 # this is where we do the niave bayes classification
-def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_spam, train_not_spam, train_prior_spam, train_prior_not_spam):
+def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, test_prior_spam, test_prior_not_spam):
     cond_prob_notspam = 0
     cond_prob_spam = 0
     conf_predict = []
@@ -109,10 +109,10 @@ def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_spam, t
     q = 0
     r = 0
     for i in range(0, 2300):
-        cond_prob_notspam = log(train_prior_not_spam)
-        cond_prob_spam = log(train_prior_spam)
+        cond_prob_notspam = log(test_prior_not_spam)
+        cond_prob_spam = log(test_prior_spam)
         for j in range(0, 56):
-            x = pow(e, -1 * ( ((test_matrix[i][j] - spam_m[j])**2) / ((2*spam_s[j])**2) ) )
+            x = pow(e, -1 * (((test_matrix[i][j] - spam_m[j])**2) / ((2*spam_s[j])**2)))
             x = x / (sqrt(2*pi)*spam_s[j])
             # x = log(x)
             cond_prob_spam = cond_prob_spam + x
@@ -130,8 +130,6 @@ def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_spam, t
             conf_predict.append(1)
     print(q, "NOT SPAM PREDICTIONS")
     print(r, "SPAM PREDICTIONS")
-    confustion_matrix = np.zeros((2, 2))
-
 
     # build confusion matrix and do some calculations
     p = 0
@@ -163,6 +161,17 @@ def naive_bayes(test_matrix, notSpam_s, notSpam_m, spam_s, spam_m, train_spam, t
     print("precision of model ~", precision)
     recall = tp / (tp + fn)
     print("recall of model ~", recall)
+
+    conf_matrix = np.empty((2,2))
+    conf_matrix[0][0] = tp
+    conf_matrix[1][0] = fp
+    conf_matrix[0][1] = fn
+    conf_matrix[1][1] = tn
+
+    print("~~CONFUSION MATRIX~~")
+    print(conf_matrix)
+
+
 
 
 
